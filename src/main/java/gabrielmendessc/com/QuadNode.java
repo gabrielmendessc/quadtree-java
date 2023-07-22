@@ -81,7 +81,7 @@ public class QuadNode<T extends Findable<T>> {
             List<Integer> quadrantList = getQuadrant(quadRect);
             if (!quadrantList.isEmpty()) {
 
-                quadrantList.forEach(quadrant -> objectList.addAll(quadNodeChildren[quadrant].queryFromNode(objectList, quadRect)));
+                quadrantList.forEach(quadrant -> quadNodeChildren[quadrant].queryFromNode(objectList, quadRect));
 
             }
 

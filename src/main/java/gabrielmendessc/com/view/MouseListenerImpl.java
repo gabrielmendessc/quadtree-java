@@ -9,7 +9,7 @@ import java.util.List;
 
 public class MouseListenerImpl implements MouseListener {
 
-    private final List<Point> addedPointList = new ArrayList<>();
+
     @Override
     public void mouseClicked(MouseEvent e) {
 
@@ -17,8 +17,6 @@ public class MouseListenerImpl implements MouseListener {
 
     @Override
     public void mousePressed(MouseEvent e) {
-
-        System.out.println("Pressionado " + e.getButton());
 
         switch (e.getButton()) {
 
@@ -28,17 +26,18 @@ public class MouseListenerImpl implements MouseListener {
 
                 AppScreen.quadTree.insert(point);
 
-                addedPointList.add(point);
+                AppScreen.addedPointList.add(point);
 
             }
 
             case MouseEvent.BUTTON2 -> {
 
                 List<Point> pointList = AppScreen.quadTree.query(new QuadRect(e.getX(), e.getY(), 50, 50));
+                System.out.println("Removed " + pointList.size());
                 pointList.forEach(point -> {
 
                     AppScreen.quadTree.remove(point);
-                    addedPointList.remove(point);
+                    AppScreen.addedPointList.remove(point);
 
                 });
 
@@ -49,7 +48,7 @@ public class MouseListenerImpl implements MouseListener {
 
             case MouseEvent.BUTTON3 -> {
 
-                Point point = addedPointList.remove(addedPointList.size() - 1);
+                Point point = AppScreen.addedPointList.remove(AppScreen.addedPointList.size() - 1);
 
                 AppScreen.quadTree.remove(point);
 

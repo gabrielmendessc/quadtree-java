@@ -1,15 +1,24 @@
 package gabrielmendessc.com.view;
 
+import gabrielmendessc.com.Main;
 import gabrielmendessc.com.QuadNode;
+import gabrielmendessc.com.QuadRect;
 
 import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Graphics;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.Random;
+import java.util.stream.Collectors;
 
 public class AppScreen extends JPanel {
 
     public static QuadNode<Point> quadTree;
+    public static List<Point> addedPointList = new ArrayList<>(); //TODO - Make thread safe
+
     public static int xMouse = 0;
     public static int yMouse = 0;
 
@@ -18,6 +27,79 @@ public class AppScreen extends JPanel {
         quadTree = new QuadNode<>(50, 50, 700, 700, 4);
         setSize(800, 800);
         setVisible(true);
+
+    }
+
+    public void simulate() {
+
+        addedPointList.forEach(point -> {
+
+            if (!point.isMoving()) {
+
+                point.setMoving(true);
+                point.setDir(new Random().nextInt(0, 3));
+
+            }
+
+            double rectX = point.getX() - 15;
+            double rectY = point.getY() - 15;
+            double rectWidth = point.getWidth() + 30;
+            double rectHeight = point.getHeight() + 30;
+            List<Point> pointList = quadTree.query(new QuadRect(rectX, rectY, rectWidth, rectHeight));
+            pointList.removeIf(o -> o.equals(point));
+
+            List<Point> intersectedPointList = pointList.stream().filter(o -> o.find(point)).toList();
+            intersectedPointList.forEach(intersectedPoint -> {
+
+                intersectedPoint.setDir(new Random().nextInt(0, 3));
+
+            });
+            if (!intersectedPointList.isEmpty()) {
+
+                point.setDir(new Random().nextInt(0, 3));
+
+            }
+
+            quadTree.remove(point);
+
+            switch (point.getDir()) {
+                case 0:
+                    point.setX((int) (point.getX() - 5));
+                    break;
+
+                case 1:
+                    point.setY((int) (point.getY() - 5));
+                    break;
+
+                case 2:
+                    point.setX((int) (point.getX() + 5));
+                    break;
+
+                case 3:
+                    point.setY((int) (point.getY() + 5));
+                    break;
+
+            }
+
+            if (point.getX() > 750) {
+                point.setX(50);
+            }
+
+            if (point.getX() < 50) {
+                point.setX(750);
+            }
+
+            if (point.getY() > 750) {
+                point.setY(50);
+            }
+
+            if (point.getY() < 50) {
+                point.setY(750);
+            }
+
+            quadTree.insert(point);
+
+        });
 
     }
 
@@ -33,6 +115,10 @@ public class AppScreen extends JPanel {
             g.drawRect(xMouse, yMouse, 50, 50);
 
         }
+
+        g.setColor(Color.BLACK);
+        g.drawString("Total: " + addedPointList.size(), 55, 65);
+        g.drawString("FPS: " + Main.FPS, 600, 65);
 
     }
 
