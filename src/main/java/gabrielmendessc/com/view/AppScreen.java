@@ -8,6 +8,7 @@ import javax.swing.JPanel;
 import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -17,7 +18,7 @@ import java.util.stream.Collectors;
 public class AppScreen extends JPanel {
 
     public static QuadNode<Point> quadTree;
-    public static List<Point> addedPointList = new ArrayList<>(); //TODO - Make thread safe
+    public static List<Point> addedPointList = Collections.synchronizedList(new ArrayList<>());
 
     public static int xMouse = 0;
     public static int yMouse = 0;
@@ -48,9 +49,12 @@ public class AppScreen extends JPanel {
             List<Point> pointList = quadTree.query(new QuadRect(rectX, rectY, rectWidth, rectHeight));
             pointList.removeIf(o -> o.equals(point));
 
-            List<Point> intersectedPointList = pointList.stream().filter(o -> o.find(point)).toList();
+            QuadRect quadCollision = new QuadRect(point.getX(), point.getY(), point.getWidth(), point.getHeight());
+
+            List<Point> intersectedPointList = pointList.stream().filter(o -> new QuadRect(o.getX(), o.getY(), o.getWidth(), o.getHeight()).intersects(quadCollision)).toList();
             intersectedPointList.forEach(intersectedPoint -> {
 
+                System.out.println("Intersected!");
                 intersectedPoint.setDir(new Random().nextInt(0, 3));
 
             });
@@ -63,22 +67,10 @@ public class AppScreen extends JPanel {
             quadTree.remove(point);
 
             switch (point.getDir()) {
-                case 0:
-                    point.setX((int) (point.getX() - 5));
-                    break;
-
-                case 1:
-                    point.setY((int) (point.getY() - 5));
-                    break;
-
-                case 2:
-                    point.setX((int) (point.getX() + 5));
-                    break;
-
-                case 3:
-                    point.setY((int) (point.getY() + 5));
-                    break;
-
+                case 0 -> point.setX((int) (point.getX() - 5));
+                case 1 -> point.setY((int) (point.getY() - 5));
+                case 2 -> point.setX((int) (point.getX() + 5));
+                case 3 -> point.setY((int) (point.getY() + 5));
             }
 
             if (point.getX() > 750) {
@@ -132,7 +124,7 @@ public class AppScreen extends JPanel {
                 g.drawRect((int) quadNode.getX(), (int) quadNode.getY(), (int) quadNode.getWidth(), (int) quadNode.getHeight());
 
                 g.setColor(Color.RED);
-                quadNode.getObjectList().forEach(object -> g.fillOval((int) object.getX(), (int) object.getY(), 5, 5));
+                quadNode.getObjectList().forEach(object -> g.fillOval((int) object.getX(), (int) object.getY(), (int) object.getWidth(), (int) object.getHeight()));
 
                 for (QuadNode<Point> quadNodeChild : quadNode.getQuadNodeChildren()) {
 

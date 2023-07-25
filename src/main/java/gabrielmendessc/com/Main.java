@@ -5,13 +5,14 @@ import gabrielmendessc.com.view.AppScreen;
 import gabrielmendessc.com.view.Point;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 public class Main {
 
     public static int FPS = 0;
     public static int FRAMES = 0;
-    private static final int FRAME_RATE = 60;
+    private static final int FRAME_RATE = 100;
     private static final double FRAME_TIME = (double) (1 * 1000000000) / FRAME_RATE;
 
     public static void main(String[] args) {

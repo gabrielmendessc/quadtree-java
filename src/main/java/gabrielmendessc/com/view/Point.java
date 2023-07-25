@@ -33,12 +33,12 @@ public class Point implements Findable<Point> {
 
     @Override
     public double getWidth() {
-        return 0;
+        return 10;
     }
 
     @Override
     public double getHeight() {
-        return 0;
+        return 10;
     }
 
     public boolean isMoving() {

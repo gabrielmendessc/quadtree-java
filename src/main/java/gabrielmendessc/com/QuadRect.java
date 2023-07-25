@@ -14,7 +14,7 @@ public class QuadRect {
         this.height = height;
     }
 
-    public boolean contains(QuadRect quadRect) {
+    public boolean intersects(QuadRect quadRect) {
 
         if (isXInside(quadRect) && isYInside(quadRect)) {
 
@@ -28,13 +28,7 @@ public class QuadRect {
 
         }
 
-        if (isHeightInside(quadRect) && (isXInside(quadRect) || isWidthInside(quadRect))) {
-
-            return true;
-
-        }
-
-        return false;
+        return isHeightInside(quadRect) && (isXInside(quadRect) || isWidthInside(quadRect));
 
     }
 

@@ -1,6 +1,7 @@
 package gabrielmendessc.com;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
@@ -10,7 +11,7 @@ public class QuadNode<T extends Findable<T>> {
     private final QuadRect quadRect;
     private final int maxObjects;
     private QuadNode<T>[] quadNodeChildren;
-    private List<T> objectList = new ArrayList<>();
+    private List<T> objectList = Collections.synchronizedList(new ArrayList<>());
 
     public QuadNode(double x, double y, double width, double height, int maxObjects) {
         this.quadRect = new QuadRect(x, y, width, height);
@@ -64,26 +65,17 @@ public class QuadNode<T extends Findable<T>> {
 
     public List<T> query(QuadRect quadRect) {
 
-       return queryFromNode(new ArrayList<>(), quadRect);
-
-    }
-
-    private List<T> queryFromNode(List<T> objectList, QuadRect quadRect) {
+        List<T> objectList = new ArrayList<>();
 
         if (Objects.isNull(quadNodeChildren[0])) {
 
             objectList.addAll(this.objectList.stream()
-                    .filter(o -> o.getX() >= quadRect.getX() && o.getX() < (quadRect.getX() + quadRect.getWidth()) && o.getY() >= quadRect.getY() && o.getY() < (quadRect.getY() + quadRect.getHeight()))
+                    .filter(o -> quadRect.intersects(new QuadRect(o.getX(), o.getY(), o.getWidth(), o.getHeight())))
                     .toList());
 
         } else {
 
-            List<Integer> quadrantList = getQuadrant(quadRect);
-            if (!quadrantList.isEmpty()) {
-
-                quadrantList.forEach(quadrant -> quadNodeChildren[quadrant].queryFromNode(objectList, quadRect));
-
-            }
+            getQuadrant(quadRect).forEach(quadrant -> objectList.addAll(quadNodeChildren[quadrant].query(quadRect)));
 
         }
 
@@ -120,7 +112,7 @@ public class QuadNode<T extends Findable<T>> {
 
     private boolean removeValue(T object) {
 
-        return objectList.removeIf(o -> o.find(object));
+        return objectList.remove(object);
 
     }
 
@@ -182,7 +174,7 @@ public class QuadNode<T extends Findable<T>> {
         List<Integer> quadrantList = new ArrayList<>();
         for (int i = 0; i < quadNodeChildren.length; i++) {
 
-            if (Objects.nonNull(quadNodeChildren[i]) && quadNodeChildren[i].getRectangle().contains(quadRect)) {
+            if (Objects.nonNull(quadNodeChildren[i]) && quadNodeChildren[i].getQuadRect().intersects(quadRect)) {
 
                 quadrantList.add(i);
 
@@ -234,7 +226,7 @@ public class QuadNode<T extends Findable<T>> {
         return x >= (getX() + (getWidth() / 2)) && x <= (getX() + getWidth()) && (y >= (getY() + (getWidth() / 2))) && y <= (getY() + getHeight());
     }
 
-    public QuadRect getRectangle() {
+    public QuadRect getQuadRect() {
         return quadRect;
     }
 
