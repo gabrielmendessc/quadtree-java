@@ -1,10 +1,9 @@
 package gabrielmendessc.com.view;
 
-import gabrielmendessc.com.Findable;
+import gabrielmendessc.com.QuadObject;
+import gabrielmendessc.com.QuadRect;
 
-import java.util.Objects;
-
-public class Point implements Findable<Point> {
+public class Point implements QuadObject {
 
     private int x;
     private int y;
@@ -14,11 +13,6 @@ public class Point implements Findable<Point> {
     public Point(int x, int y) {
         this.x = x;
         this.y = y;
-    }
-
-    @Override
-    public boolean find(Point point) {
-        return Objects.equals(x, (int) point.getX()) && Objects.equals(y, (int) point.getY());
     }
 
     @Override
@@ -33,12 +27,17 @@ public class Point implements Findable<Point> {
 
     @Override
     public double getWidth() {
-        return 10;
+        return 30;
     }
 
     @Override
     public double getHeight() {
-        return 10;
+        return 30;
+    }
+
+    @Override
+    public QuadRect getQuadRect() {
+        return new QuadRect(getX(), getY(), getWidth(), getHeight());
     }
 
     public boolean isMoving() {

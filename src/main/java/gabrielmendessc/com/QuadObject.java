@@ -1,10 +1,6 @@
 package gabrielmendessc.com;
 
-import java.awt.Rectangle;
-
-public interface Findable<T> {
-
-    boolean find(T t);
+public interface QuadObject {
 
     double getX();
 
@@ -13,5 +9,7 @@ public interface Findable<T> {
     double getWidth();
 
     double getHeight();
+
+    QuadRect getQuadRect();
 
 }

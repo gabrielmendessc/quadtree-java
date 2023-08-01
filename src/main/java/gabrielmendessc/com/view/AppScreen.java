@@ -11,9 +11,8 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Random;
-import java.util.stream.Collectors;
+import java.util.Set;
 
 public class AppScreen extends JPanel {
 
@@ -25,7 +24,7 @@ public class AppScreen extends JPanel {
 
     public AppScreen() {
 
-        quadTree = new QuadNode<>(50, 50, 700, 700, 4);
+        quadTree = new QuadNode<>(new QuadRect(50, 50, 700, 700) , 4, 7);
         setSize(800, 800);
         setVisible(true);
 
@@ -46,7 +45,7 @@ public class AppScreen extends JPanel {
             double rectY = point.getY() - 15;
             double rectWidth = point.getWidth() + 30;
             double rectHeight = point.getHeight() + 30;
-            List<Point> pointList = quadTree.query(new QuadRect(rectX, rectY, rectWidth, rectHeight));
+            Set<Point> pointList = quadTree.query(new QuadRect(rectX, rectY, rectWidth, rectHeight));
             pointList.removeIf(o -> o.equals(point));
 
             QuadRect quadCollision = new QuadRect(point.getX(), point.getY(), point.getWidth(), point.getHeight());
@@ -54,7 +53,6 @@ public class AppScreen extends JPanel {
             List<Point> intersectedPointList = pointList.stream().filter(o -> new QuadRect(o.getX(), o.getY(), o.getWidth(), o.getHeight()).intersects(quadCollision)).toList();
             intersectedPointList.forEach(intersectedPoint -> {
 
-                System.out.println("Intersected!");
                 intersectedPoint.setDir(new Random().nextInt(0, 3));
 
             });
@@ -124,7 +122,7 @@ public class AppScreen extends JPanel {
                 g.drawRect((int) quadNode.getX(), (int) quadNode.getY(), (int) quadNode.getWidth(), (int) quadNode.getHeight());
 
                 g.setColor(Color.RED);
-                quadNode.getObjectList().forEach(object -> g.fillOval((int) object.getX(), (int) object.getY(), (int) object.getWidth(), (int) object.getHeight()));
+                quadNode.getObjectSet().forEach(object -> g.fillRect((int) object.getX(), (int) object.getY(), (int) object.getWidth(), (int) object.getHeight()));
 
                 for (QuadNode<Point> quadNodeChild : quadNode.getQuadNodeChildren()) {
 

@@ -2,54 +2,61 @@ package gabrielmendessc.com;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
 
-public class QuadNode<T extends Findable<T>> {
+public class QuadNode<T extends QuadObject> {
 
     private final QuadRect quadRect;
     private final int maxObjects;
+    private final int maxDepth;
+    private final int depth;
     private QuadNode<T>[] quadNodeChildren;
-    private List<T> objectList = Collections.synchronizedList(new ArrayList<>());
+    private Set<T> objectSet = Collections.synchronizedSet(new HashSet<>());
 
-    public QuadNode(double x, double y, double width, double height, int maxObjects) {
-        this.quadRect = new QuadRect(x, y, width, height);
+    public QuadNode(QuadRect quadRect, int maxObjects, int maxDepth) {
+        this.quadRect = quadRect;
         this.maxObjects = maxObjects;
         this.quadNodeChildren = new QuadNode[4];
+        this.maxDepth = maxDepth;
+        this.depth = 1;
     }
 
-    public void insert(T object) {
+    private QuadNode(QuadRect quadRect, int maxObjects, int maxDepth, int depth) {
+        this.quadRect = quadRect;
+        this.maxObjects = maxObjects;
+        this.quadNodeChildren = new QuadNode[4];
+        this.maxDepth = maxDepth;
+        this.depth = depth;
+    }
+
+    public synchronized void insert(T object) {
 
         if (Objects.nonNull(quadNodeChildren[0])) {
 
-            int quadrant = getQuadrant(object.getX(), object.getY());
-            if (!Objects.equals(quadrant, -1)) {
+            List<Integer> quadrantList = getQuadrant(object.getQuadRect());
+            if (!quadrantList.isEmpty()) {
 
-                quadNodeChildren[quadrant].insert(object);
-
-                return;
+                quadrantList.forEach(quadrant -> quadNodeChildren[quadrant].insert(object));
 
             }
 
-        }
-
-        if (object.getX() < getX() || object.getX() > (getX() + getWidth())) {
-
-            throw new RuntimeException("Object position out of bound!");
+            return;
 
         }
 
-        if (object.getY() < getY() || object.getY() > (getY() + getHeight())) {
+        if (!object.getQuadRect().intersects(quadRect)) {
 
-            throw new RuntimeException("Object position out of bound!");
+              throw new RuntimeException("Object position out of bound!");
 
         }
 
+        objectSet.add(object);
 
-        objectList.add(object);
-
-        if (objectList.size() > maxObjects) {
+        if (objectSet.size() > maxObjects && depth < maxDepth) {
 
             slice();
 
@@ -57,33 +64,7 @@ public class QuadNode<T extends Findable<T>> {
 
     }
 
-    public void remove(T object) {
-
-        removeFromNode(object);
-
-    }
-
-    public List<T> query(QuadRect quadRect) {
-
-        List<T> objectList = new ArrayList<>();
-
-        if (Objects.isNull(quadNodeChildren[0])) {
-
-            objectList.addAll(this.objectList.stream()
-                    .filter(o -> quadRect.intersects(new QuadRect(o.getX(), o.getY(), o.getWidth(), o.getHeight())))
-                    .toList());
-
-        } else {
-
-            getQuadrant(quadRect).forEach(quadrant -> objectList.addAll(quadNodeChildren[quadrant].query(quadRect)));
-
-        }
-
-        return objectList;
-
-    }
-
-    private boolean removeFromNode(T object) {
+    public synchronized boolean remove(T object) {
 
         if (Objects.isNull(quadNodeChildren[0])) {
 
@@ -91,10 +72,21 @@ public class QuadNode<T extends Findable<T>> {
 
         }
 
-        int quadrant = getQuadrant(object.getX(), object.getY());
-        if (!Objects.equals(quadrant, -1)) {
+        List<Integer> quadrantList = getQuadrant(object.getQuadRect());
+        if (!quadrantList.isEmpty()) {
 
-            if (quadNodeChildren[quadrant].removeFromNode(object)) {
+            boolean wasAnyChildrenObjectRemoved = false;
+            for (QuadNode<T> quadNodeChild : quadNodeChildren) {
+
+                if (quadNodeChild.remove(object)) {
+
+                    wasAnyChildrenObjectRemoved = true;
+
+                }
+
+            }
+
+            if (wasAnyChildrenObjectRemoved) {
 
                 return tryMerge();
 
@@ -110,15 +102,35 @@ public class QuadNode<T extends Findable<T>> {
 
     }
 
+    public synchronized Set<T> query(QuadRect quadRect) {
+
+        Set<T> objectSet = new HashSet<>();
+
+        if (Objects.isNull(quadNodeChildren[0])) {
+
+            objectSet.addAll(this.objectSet.stream()
+                    .filter(o -> quadRect.intersects(o.getQuadRect()))
+                    .toList());
+
+        } else {
+
+            getQuadrant(quadRect).forEach(quadrant -> objectSet.addAll(quadNodeChildren[quadrant].query(quadRect)));
+
+        }
+
+        return objectSet;
+
+    }
+
     private boolean removeValue(T object) {
 
-        return objectList.remove(object);
+        return objectSet.remove(object);
 
     }
 
     private boolean tryMerge() {
 
-        List<T> mergedObjectList = new ArrayList<>();
+        Set<T> mergedObjectSet = Collections.synchronizedSet(new HashSet<>());
 
         for (QuadNode<T> quadNodeChild : quadNodeChildren) {
 
@@ -126,7 +138,7 @@ public class QuadNode<T extends Findable<T>> {
 
                 if (Objects.isNull(quadNodeChild.getQuadNodeChildren()[0])) {
 
-                    mergedObjectList.addAll(quadNodeChild.getObjectList());
+                    mergedObjectSet.addAll(quadNodeChild.getObjectSet());
 
                 } else {
 
@@ -138,9 +150,9 @@ public class QuadNode<T extends Findable<T>> {
 
         }
 
-        if (mergedObjectList.size() <= maxObjects) {
+        if (mergedObjectSet.size() <= maxObjects) {
 
-            this.objectList = mergedObjectList;
+            this.objectSet = mergedObjectSet;
             quadNodeChildren = new QuadNode[4];
 
             return true;
@@ -153,12 +165,12 @@ public class QuadNode<T extends Findable<T>> {
 
     private void slice() {
 
-        quadNodeChildren[0] = new QuadNode<>(getX(), getY(), getWidth() / 2, getHeight() / 2, maxObjects);
-        quadNodeChildren[1] = new QuadNode<>(getX() + (getWidth() / 2), getY(), getWidth() / 2, getHeight() / 2, maxObjects);
-        quadNodeChildren[2] = new QuadNode<>(getX(), getY() + (getHeight() / 2), getWidth() / 2, getHeight() / 2, maxObjects);
-        quadNodeChildren[3] = new QuadNode<>(getX() + (getWidth() / 2), getY() + (getHeight() / 2), getWidth() / 2, getHeight() / 2, maxObjects);
+        quadNodeChildren[0] = new QuadNode(new QuadRect(getX(), getY(), getWidth() / 2, getHeight() / 2), maxObjects, maxDepth, depth + 1);
+        quadNodeChildren[1] = new QuadNode(new QuadRect(getX() + (getWidth() / 2), getY(), getWidth() / 2, getHeight() / 2), maxObjects, maxDepth, depth + 1);
+        quadNodeChildren[2] = new QuadNode(new QuadRect(getX(), getY() + (getHeight() / 2), getWidth() / 2, getHeight() / 2), maxObjects, maxDepth, depth + 1);
+        quadNodeChildren[3] = new QuadNode(new QuadRect(getX() + (getWidth() / 2), getY() + (getHeight() / 2), getWidth() / 2, getHeight() / 2), maxObjects, maxDepth, depth + 1);
 
-        Iterator<T> iterator = objectList.iterator();
+        Iterator<T> iterator = objectSet.iterator();
         while (iterator.hasNext()) {
 
             insert(iterator.next());
@@ -186,46 +198,6 @@ public class QuadNode<T extends Findable<T>> {
 
     }
 
-    private int getQuadrant(double x, double y) {
-
-        if (isTopLeft(x, y)) {
-
-            return 0;
-
-        } else if (isTopRight(x, y)) {
-
-            return 1;
-
-        } else if (isBottomLeft(x, y)) {
-
-            return 2;
-
-        } else if (isBottomRight(x, y)) {
-
-            return 3;
-
-        }
-
-        return -1;
-
-    }
-
-    private boolean isTopLeft(double x, double y) {
-        return x >= getX() && (x < (getX() + (getWidth() / 2))) && (y >= getY()) && (y < (getY() + (getHeight() / 2)));
-    }
-
-    private boolean isTopRight(double x, double y) {
-        return x >= (getX() + (getWidth() / 2)) && x <= (getX() + getWidth()) && (y >= getY()) && (y < (getY() + (getHeight() / 2)));
-    }
-
-    private boolean isBottomLeft(double x, double y) {
-        return x >= getX() && (x < (getX() + (getWidth() / 2))) && (y >= (getY() + (getWidth() / 2))) && y <= (getY() + getHeight());
-    }
-
-    private boolean isBottomRight(double x, double y) {
-        return x >= (getX() + (getWidth() / 2)) && x <= (getX() + getWidth()) && (y >= (getY() + (getWidth() / 2))) && y <= (getY() + getHeight());
-    }
-
     public QuadRect getQuadRect() {
         return quadRect;
     }
@@ -246,11 +218,11 @@ public class QuadNode<T extends Findable<T>> {
         return quadRect.getHeight();
     }
 
-    public List<T> getObjectList() {
-        return objectList;
+    public Set<T> getObjectSet() {
+        return objectSet;
     }
 
-    public QuadNode<T>[] getQuadNodeChildren() {
+    public QuadNode[] getQuadNodeChildren() {
         return quadNodeChildren;
     }
 

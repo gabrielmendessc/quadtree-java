@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 public class MouseListenerImpl implements MouseListener {
 
@@ -32,7 +33,7 @@ public class MouseListenerImpl implements MouseListener {
 
             case MouseEvent.BUTTON2 -> {
 
-                List<Point> pointList = AppScreen.quadTree.query(new QuadRect(e.getX(), e.getY(), 50, 50));
+                Set<Point> pointList = AppScreen.quadTree.query(new QuadRect(e.getX(), e.getY(), 50, 50));
                 System.out.println("Removed " + pointList.size());
                 pointList.forEach(point -> {
 
@@ -51,6 +52,8 @@ public class MouseListenerImpl implements MouseListener {
                 Point point = AppScreen.addedPointList.remove(AppScreen.addedPointList.size() - 1);
 
                 AppScreen.quadTree.remove(point);
+
+                System.out.println(AppScreen.quadTree);
 
             }
 

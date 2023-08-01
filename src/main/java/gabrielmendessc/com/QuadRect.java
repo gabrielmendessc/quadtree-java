@@ -34,20 +34,20 @@ public class QuadRect {
 
     private boolean isHeightInside(QuadRect quadRect) {
 
-        return (quadRect.getY() + quadRect.getHeight()) >= y && quadRect.getY() < (y + height);
+        return (quadRect.getY() + quadRect.getHeight()) >= y && quadRect.getY() <= (y + height);
 
     }
 
 
     private boolean isWidthInside(QuadRect quadRect) {
 
-        return (quadRect.getX() + quadRect.getWidth()) >= x && quadRect.getX() < (x + width);
+        return (quadRect.getX() + quadRect.getWidth()) >= x && quadRect.getX() <= (x + width);
 
     }
 
     private boolean isXInside(QuadRect quadRect) {
 
-        return quadRect.getX() >= x && quadRect.getX() < (x + width);
+        return quadRect.getX() >= x && quadRect.getX() <= (x + width);
 
     }
 
@@ -74,5 +74,19 @@ public class QuadRect {
         return height;
     }
 
+    public void setX(double x) {
+        this.x = x;
+    }
 
+    public void setY(double y) {
+        this.y = y;
+    }
+
+    public void setWidth(double width) {
+        this.width = width;
+    }
+
+    public void setHeight(double height) {
+        this.height = height;
+    }
 }
