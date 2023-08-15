@@ -5,8 +5,10 @@ import gabrielmendessc.com.QuadRect;
 
 public class Point implements QuadObject {
 
-    private int x;
-    private int y;
+    private double x;
+    private double y;
+    private double xVel;
+    private double yVel;
     private int dir;
     private boolean isMoving;
 
@@ -44,12 +46,28 @@ public class Point implements QuadObject {
         return isMoving;
     }
 
-    public void setX(int x) {
+    public void setX(double x) {
         this.x = x;
     }
 
-    public void setY(int y) {
+    public void setY(double y) {
         this.y = y;
+    }
+
+    public double getXVel() {
+        return xVel;
+    }
+
+    public void setXVel(double xVel) {
+        this.xVel = xVel;
+    }
+
+    public double getYVel() {
+        return yVel;
+    }
+
+    public void setYVel(double yVel) {
+        this.yVel = yVel;
     }
 
     public void setMoving(boolean moving) {

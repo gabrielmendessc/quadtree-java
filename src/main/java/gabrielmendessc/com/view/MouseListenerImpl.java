@@ -6,6 +6,7 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 import java.util.Set;
 
 public class MouseListenerImpl implements MouseListener {
@@ -24,6 +25,13 @@ public class MouseListenerImpl implements MouseListener {
             case MouseEvent.BUTTON1 -> {
 
                 Point point = new Point(e.getX(), e.getY());
+                point.setMoving(true);
+
+                int xVel = new Random().nextInt(1, 10);
+                int yVel = 10 - xVel;
+
+                point.setXVel(xVel);
+                point.setYVel(yVel);
 
                 AppScreen.quadTree.insert(point);
 

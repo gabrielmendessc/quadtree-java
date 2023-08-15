@@ -9,15 +9,17 @@ import java.awt.Color;
 import java.awt.Graphics;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;
-import java.util.Random;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AppScreen extends JPanel {
 
     public static QuadNode<Point> quadTree;
     public static List<Point> addedPointList = Collections.synchronizedList(new ArrayList<>());
+    public static Set<Point> intersectedPointSet = Collections.synchronizedSet(new HashSet<>());
 
     public static int xMouse = 0;
     public static int yMouse = 0;
@@ -32,14 +34,9 @@ public class AppScreen extends JPanel {
 
     public void simulate() {
 
+        intersectedPointSet.clear();
+
         addedPointList.forEach(point -> {
-
-            if (!point.isMoving()) {
-
-                point.setMoving(true);
-                point.setDir(new Random().nextInt(0, 3));
-
-            }
 
             double rectX = point.getX() - 15;
             double rectY = point.getY() - 15;
@@ -48,43 +45,70 @@ public class AppScreen extends JPanel {
             Set<Point> pointList = quadTree.query(new QuadRect(rectX, rectY, rectWidth, rectHeight));
             pointList.removeIf(o -> o.equals(point));
 
-            QuadRect quadCollision = new QuadRect(point.getX(), point.getY(), point.getWidth(), point.getHeight());
+            Set<Point> intersectedSet = pointList.stream().filter(o -> o.getQuadRect().intersects(point.getQuadRect())).collect(Collectors.toSet());
+            if (!intersectedSet.isEmpty()) {
 
-            List<Point> intersectedPointList = pointList.stream().filter(o -> new QuadRect(o.getX(), o.getY(), o.getWidth(), o.getHeight()).intersects(quadCollision)).toList();
-            intersectedPointList.forEach(intersectedPoint -> {
-
-                intersectedPoint.setDir(new Random().nextInt(0, 3));
-
-            });
-            if (!intersectedPointList.isEmpty()) {
-
-                point.setDir(new Random().nextInt(0, 3));
+                intersectedPointSet.addAll(intersectedSet);
+                intersectedPointSet.add(point);
 
             }
 
             quadTree.remove(point);
 
-            switch (point.getDir()) {
-                case 0 -> point.setX((int) (point.getX() - 5));
-                case 1 -> point.setY((int) (point.getY() - 5));
-                case 2 -> point.setX((int) (point.getX() + 5));
-                case 3 -> point.setY((int) (point.getY() + 5));
+            double bottomThreshold = 750 - point.getHeight();
+            double topThreshold = 50;
+            double rightThreshold = 750 - point.getWidth();
+            double leftThreshold = 50;
+
+            double finalYPos = point.getY() + point.getYVel();
+            double finalXPos = point.getX() + point.getXVel();
+
+            if (finalYPos > bottomThreshold) {
+
+                double aftermatchFrame = (bottomThreshold - finalYPos) / (point.getY() - finalYPos);
+
+                point.setY(bottomThreshold + ((point.getYVel() * aftermatchFrame) * -1));
+                point.setYVel(point.getYVel() * -1);
+
+                intersectedPointSet.add(point);
+
+            } else if (finalYPos < topThreshold) {
+
+                double aftermatchFrame = (topThreshold - finalYPos) / (point.getY() - finalYPos);
+
+                point.setY(topThreshold + ((point.getYVel() * aftermatchFrame) * -1));
+                point.setYVel(point.getYVel() * -1);
+
+                intersectedPointSet.add(point);
+
+            } else {
+
+                point.setY(point.getY() + point.getYVel());
+
             }
 
-            if (point.getX() > 750) {
-                point.setX(50);
-            }
+            if (finalXPos > rightThreshold) {
 
-            if (point.getX() < 50) {
-                point.setX(750);
-            }
+                double aftermatchFrame = (rightThreshold - finalXPos) / (point.getX() - finalXPos);
 
-            if (point.getY() > 750) {
-                point.setY(50);
-            }
+                point.setX(rightThreshold + ((point.getXVel() * aftermatchFrame) * -1));
+                point.setXVel(point.getXVel() * -1);
 
-            if (point.getY() < 50) {
-                point.setY(750);
+                intersectedPointSet.add(point);
+
+            } else if (finalXPos < leftThreshold) {
+
+                double aftermatchFrame = (leftThreshold - finalXPos) / (point.getX() - finalXPos);
+
+                point.setX(leftThreshold + ((point.getXVel() * aftermatchFrame) * -1));
+                point.setXVel(point.getXVel() * -1);
+
+                intersectedPointSet.add(point);
+
+            } else {
+
+                point.setX(point.getX() + point.getXVel());
+
             }
 
             quadTree.insert(point);
@@ -105,6 +129,9 @@ public class AppScreen extends JPanel {
             g.drawRect(xMouse, yMouse, 50, 50);
 
         }
+
+        g.setColor(Color.YELLOW);
+        intersectedPointSet.forEach(point -> g.fillRect((int) point.getX(), (int) point.getY(), (int) point.getWidth(), (int) point.getHeight()));
 
         g.setColor(Color.BLACK);
         g.drawString("Total: " + addedPointList.size(), 55, 65);
