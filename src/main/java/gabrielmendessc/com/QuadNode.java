@@ -218,7 +218,7 @@ public class QuadNode<T extends QuadObject> {
         return quadRect.getHeight();
     }
 
-    public Set<T> getObjectSet() {
+    public synchronized Set<T> getObjectSet() {
         return objectSet;
     }
 

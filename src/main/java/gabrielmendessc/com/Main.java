@@ -2,43 +2,57 @@ package gabrielmendessc.com;
 
 import gabrielmendessc.com.view.AppFrame;
 import gabrielmendessc.com.view.AppScreen;
-import gabrielmendessc.com.view.Point;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 
 public class Main {
 
     public static int FPS = 0;
     public static int FRAMES = 0;
-    private static final int FRAME_RATE = 30;
-    private static final double FRAME_TIME = (double) (1 * 1000000000) / FRAME_RATE;
+
+    private static final int UPDATE_RATE = 90;
+    private static final double UPDATE_TIME = (double) (1 * 1000000000) / UPDATE_RATE;
+
+    private static AppScreen appScreen;
+    private static AppFrame appFrame;
 
     public static void main(String[] args) {
 
-        AppScreen appScreen = new AppScreen();
-        AppFrame appFrame = new AppFrame(appScreen);
+        appScreen = new AppScreen();
+        appFrame = new AppFrame(appScreen);
+
+        new Thread(Main::renderLoop).start();
+        new Thread(Main::simulationLoop).start();
+        new Thread(Main::checkFpsLoop).start();
+
+
+    }
+
+    public static void renderLoop() {
+
+        while (true) {
+
+            appFrame.repaint();
+
+            FRAMES++;
+
+        }
+
+    }
+
+    public static void simulationLoop() {
 
         double lastFrameTime = System.nanoTime();
         double elapsedFrameTime = 0;
-
-        new Thread(Main::checkFpsLoop).start();
 
         while (true) {
 
             long currentFrameTime = System.nanoTime();
 
-            elapsedFrameTime += calculateElapsedFrameTime(lastFrameTime, currentFrameTime);
+            elapsedFrameTime += calculateElapsedUpdateTime(lastFrameTime, currentFrameTime);
             lastFrameTime = currentFrameTime;
 
             if (elapsedFrameTime >= 1) {
 
                 appScreen.simulate();
-
-                appFrame.repaint();
-
-                FRAMES++;
 
                 elapsedFrameTime--;
 
@@ -72,9 +86,9 @@ public class Main {
 
     }
 
-    private static double calculateElapsedFrameTime(double lastFrameTime, long currentFrameTime) {
+    private static double calculateElapsedUpdateTime(double lastUpdateTime, long currentUpdateTime) {
 
-        return (currentFrameTime - lastFrameTime) / FRAME_TIME;
+        return (currentUpdateTime - lastUpdateTime) / UPDATE_TIME;
 
     }
 

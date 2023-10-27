@@ -9,7 +9,6 @@ public class Point implements QuadObject {
     private double y;
     private double xVel;
     private double yVel;
-    private int dir;
     private boolean isMoving;
 
     public Point(int x, int y) {
@@ -74,11 +73,8 @@ public class Point implements QuadObject {
         isMoving = moving;
     }
 
-    public int getDir() {
-        return dir;
-    }
+    public double getXCenter() { return x + (getWidth() / 2); }
 
-    public void setDir(int dir) {
-        this.dir = dir;
-    }
+    public double getYCenter() { return y + (getHeight() / 2); }
+
 }

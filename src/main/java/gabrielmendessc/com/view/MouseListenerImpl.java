@@ -27,8 +27,8 @@ public class MouseListenerImpl implements MouseListener {
                 Point point = new Point(e.getX(), e.getY());
                 point.setMoving(true);
 
-                int xVel = new Random().nextInt(1, 10);
-                int yVel = 10 - xVel;
+                int xVel = new Random().nextInt(1, 5);
+                int yVel = 5 - xVel;
 
                 point.setXVel(xVel);
                 point.setYVel(yVel);
@@ -41,8 +41,7 @@ public class MouseListenerImpl implements MouseListener {
 
             case MouseEvent.BUTTON2 -> {
 
-                Set<Point> pointList = AppScreen.quadTree.query(new QuadRect(e.getX(), e.getY(), 50, 50));
-                System.out.println("Removed " + pointList.size());
+                Set<Point> pointList = AppScreen.quadTree.query(new QuadRect(e.getX(), e.getY(), 100, 100));
                 pointList.forEach(point -> {
 
                     AppScreen.quadTree.remove(point);
@@ -60,8 +59,6 @@ public class MouseListenerImpl implements MouseListener {
                 Point point = AppScreen.addedPointList.remove(AppScreen.addedPointList.size() - 1);
 
                 AppScreen.quadTree.remove(point);
-
-                System.out.println(AppScreen.quadTree);
 
             }
 

@@ -20,13 +20,14 @@ public class AppScreen extends JPanel {
     public static QuadNode<Point> quadTree;
     public static List<Point> addedPointList = Collections.synchronizedList(new ArrayList<>());
     public static Set<Point> intersectedPointSet = Collections.synchronizedSet(new HashSet<>());
+    public static double totalEnergy = 0.0;
 
     public static int xMouse = 0;
     public static int yMouse = 0;
 
     public AppScreen() {
 
-        quadTree = new QuadNode<>(new QuadRect(50, 50, 700, 700) , 4, 7);
+        quadTree = new QuadNode<>(new QuadRect(50, 50, 700, 700) , 4, 4);
         setSize(800, 800);
         setVisible(true);
 
@@ -34,9 +35,9 @@ public class AppScreen extends JPanel {
 
     public void simulate() {
 
-        intersectedPointSet.clear();
-
         addedPointList.forEach(point -> {
+
+            intersectedPointSet.remove(point);
 
             double rectX = point.getX() - 15;
             double rectY = point.getY() - 15;
@@ -120,21 +121,26 @@ public class AppScreen extends JPanel {
     @Override
     public void paintComponent(Graphics g) {
 
+        totalEnergy = 0.0;
+
         paintQuadNode(g, quadTree);
 
         if (xMouse > 0 && yMouse > 0) {
 
             g.setColor(Color.BLUE);
 
-            g.drawRect(xMouse, yMouse, 50, 50);
+            g.drawRect(xMouse, yMouse, 100, 100);
 
         }
 
         g.setColor(Color.YELLOW);
-        intersectedPointSet.forEach(point -> g.fillRect((int) point.getX(), (int) point.getY(), (int) point.getWidth(), (int) point.getHeight()));
+        intersectedPointSet.forEach(point -> {
+            g.fillRect((int) point.getX(), (int) point.getY(), (int) point.getWidth(), (int) point.getHeight());
+        });
 
         g.setColor(Color.BLACK);
         g.drawString("Total: " + addedPointList.size(), 55, 65);
+        g.drawString("Col: " + intersectedPointSet.size(), 350, 65);
         g.drawString("FPS: " + Main.FPS, 600, 65);
 
     }
@@ -149,7 +155,10 @@ public class AppScreen extends JPanel {
                 g.drawRect((int) quadNode.getX(), (int) quadNode.getY(), (int) quadNode.getWidth(), (int) quadNode.getHeight());
 
                 g.setColor(Color.RED);
-                quadNode.getObjectSet().forEach(object -> g.fillRect((int) object.getX(), (int) object.getY(), (int) object.getWidth(), (int) object.getHeight()));
+                quadNode.getObjectSet().forEach(object -> {
+                    g.fillRect((int) object.getX(), (int) object.getY(), (int) object.getWidth(), (int) object.getHeight());
+                    totalEnergy += (Math.abs(object.getXVel()) + Math.abs(object.getYVel()));
+                });
 
                 for (QuadNode<Point> quadNodeChild : quadNode.getQuadNodeChildren()) {
 
